@@ -115,6 +115,7 @@ void *plat_gl_proc(const char *name)
 
 void (*plat_ask_hook)(int begin);
 void (*plat_touch_hook)(int type, int finger_id, float norm_x, float norm_y);
+void (*plat_back_hook)(void);
 
 static SDL_FingerID g_finger_ids[10];
 static int g_finger_active[10];
@@ -144,6 +145,11 @@ bool plat_poll(void)
             g_quit = true;
             break;
         case SDL_KEYDOWN:
+            if (ev.key.keysym.scancode == SDL_SCANCODE_AC_BACK ||
+                ev.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+                if (plat_back_hook)
+                    plat_back_hook();
+            }
             break;
         case SDL_FINGERDOWN:
         case SDL_FINGERMOTION:

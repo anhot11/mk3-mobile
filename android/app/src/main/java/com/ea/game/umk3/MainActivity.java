@@ -2,6 +2,14 @@ package com.ea.game.umk3;
 
 import org.libsdl.app.SDLActivity;
 import android.os.Bundle;
+import android.os.Build;
+import android.os.Vibrator;
+import android.os.VibrationEffect;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.media.AudioManager;
+import android.view.View;
+import android.view.WindowManager;
 import android.util.Log;
 import java.io.*;
 import java.util.Enumeration;
@@ -21,21 +29,69 @@ public class MainActivity extends SDLActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Enable edge-to-edge drawing into display cutout (notch)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            getWindow().getAttributes().layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
+
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
         copyAssetsToInternalStorage();
         super.onCreate(savedInstanceState);
+        hideSystemUI();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            hideSystemUI();
+        }
+    }
+
+    private void hideSystemUI() {
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            | View.SYSTEM_UI_FLAG_FULLSCREEN);
+    }
+
+    public static void vibrate(int milliseconds) {
+        if (getContext() != null) {
+            try {
+                Vibrator v = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+                if (v != null && v.hasVibrator()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        v.vibrate(VibrationEffect.createOneShot(milliseconds, VibrationEffect.DEFAULT_AMPLITUDE));
+                    } else {
+                        v.vibrate(milliseconds);
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Vibrate error: " + e.getMessage());
+            }
+        }
     }
 
     private void copyAssetsToInternalStorage() {
+        SharedPreferences prefs = getSharedPreferences("umk3_prefs", MODE_PRIVATE);
+        int lastExtractedVersion = prefs.getInt("extracted_version", -1);
+        int currentVersion = BuildConfig.VERSION_CODE;
+
         File internalRes = new File(getFilesDir(), "res");
         File probeFile = new File(internalRes, "Info.plist");
-        if (probeFile.exists() && probeFile.length() > 0) {
-            Log.i(TAG, "Assets already extracted to " + internalRes.getAbsolutePath());
+        if (lastExtractedVersion == currentVersion && probeFile.exists() && probeFile.length() > 0) {
+            Log.i(TAG, "Assets already up-to-date for version " + currentVersion);
             return;
         }
 
         internalRes.mkdirs();
         try {
-            Log.i(TAG, "Extracting assets from APK to internal storage...");
+            Log.i(TAG, "Extracting assets from APK to internal storage (version " + currentVersion + ")...");
             boolean extractedViaZip = false;
             try {
                 ZipFile zip = new ZipFile(new File(getPackageCodePath()));
@@ -94,7 +150,8 @@ public class MainActivity extends SDLActivity {
                 copyAssetFile(getAssets(), "Info.plist", new File(getFilesDir(), "Info.plist"));
             }
 
-            Log.i(TAG, "Assets extracted successfully!");
+            prefs.edit().putInt("extracted_version", currentVersion).apply();
+            Log.i(TAG, "Assets extracted successfully for version " + currentVersion + "!");
         } catch (Exception e) {
             Log.e(TAG, "Failed extracting assets: " + e.getMessage(), e);
         }

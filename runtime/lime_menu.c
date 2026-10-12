@@ -970,10 +970,10 @@ void limeModalNoInternet(void) { (void)ask(0x3b5, 0x3b6, 0xc, 0); }
 #else
 long limeModalAreYouSure(void) { return 0; }
 void limeModalNoInternet(void) { }
-#endif
 void limeStartLoadingAnim(void)            { }
 void limeStopLoadingAnim(void)             { }
-void limeSetVibrate(void)                   { }
+void plat_vibrate(int ms);
+void limeSetVibrate(void)                   { plat_vibrate(45); }
 void limeLoadURLInternal(const char *url)  { (void)url; }
 /* armv7 0x000669ec: the PVR texture array, TextureDups cleared, and both
  * frame clocks set to now so the first limeBegin sees no elapsed time. The

@@ -1120,6 +1120,15 @@ static void on_plat_touch(int type, int finger_id, float norm_x, float norm_y)
     }
 }
 
+static void on_plat_back(void)
+{
+    extern long FE_TaskStackPointer;
+    void PopFETaskDeferred(void);
+    if (FE_TaskStackPointer > 0) {
+        PopFETaskDeferred();
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *root = (argc > 1 && argv[1][0] != '-') ? argv[1] : "res";
@@ -1259,6 +1268,7 @@ int main(int argc, char **argv)
     GameCodeInit();
 
     plat_touch_hook = on_plat_touch;
+    plat_back_hook = on_plat_back;
     last = plat_time();
     while (plat_poll()) {
         int mx, my, down, ww, wh, vx, vy, vw, vh;

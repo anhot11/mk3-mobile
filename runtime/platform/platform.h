@@ -37,6 +37,7 @@ void *plat_gl_proc(const char *name);
  * its frame on the window first and go back to where it draws after. */
 extern void (*plat_ask_hook)(int begin);
 extern void (*plat_touch_hook)(int type, int finger_id, float norm_x, float norm_y);
+extern void (*plat_back_hook)(void);
 
 /* Pump the OS event queue. Returns false once the user has asked to quit. */
 bool plat_poll(void);

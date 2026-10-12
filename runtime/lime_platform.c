@@ -636,7 +636,35 @@ void LIME_GLAPI glColorPointer(int s, unsigned t, int st, const void *p)    { (v
 void LIME_GLAPI glColor4f(float r, float g, float b, float a){ (void)r; (void)g; (void)b; (void)a; }
 void LIME_GLAPI glDepthMask(unsigned char flag)              { (void)flag; }
 void LIME_GLAPI glShadeModel(unsigned mode)                  { (void)mode; }
-void LIME_GLAPI glCullFace(unsigned mode)                    { (void)mode; }
 void lime_update_texture_filtering(int hd)                   { (void)hd; }
 
 #endif  /* !UMK3_REAL_GL */
+
+/* ------------------------------------------------------------------- haptics */
+
+#ifdef __ANDROID__
+#include <jni.h>
+
+extern JNIEnv* SDL_AndroidGetJNIEnv(void);
+
+void plat_vibrate(int ms)
+{
+    JNIEnv *env = SDL_AndroidGetJNIEnv();
+    if (!env) return;
+    jclass cls = (*env)->FindClass(env, "com/ea/game/umk3/MainActivity");
+    if (!cls) {
+        (*env)->ExceptionClear(env);
+        return;
+    }
+    jmethodID mid = (*env)->GetStaticMethodID(env, cls, "vibrate", "(I)V");
+    if (mid) {
+        (*env)->CallStaticVoidMethod(env, cls, mid, (jint)ms);
+    }
+    (*env)->DeleteLocalRef(env, cls);
+}
+#else
+void plat_vibrate(int ms)
+{
+    (void)ms;
+}
+#endif
