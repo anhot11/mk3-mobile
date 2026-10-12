@@ -2518,19 +2518,47 @@ extern uint32_t *character_anitabs2[];  /* 0x0016ee9c */
 
 void get_char_ani(MK3OBJ *obj)
 {
-    obj->field40 = character_anitabs1[obj->field08->field24][obj->field40];
+    if (!obj || !obj->field08)
+        return;
+    uint32_t c = obj->field08->field24;
+    if (c >= 26)
+        return;
+    if (obj->field40 > 0x48)
+        return;
+    uint32_t *tab = character_anitabs1[c];
+    if (tab)
+        obj->field40 = tab[obj->field40];
 }
 
 void get_char_ani2(MK3OBJ *obj)
 {
-    obj->field40 = character_anitabs2[obj->field08->field24][obj->field40];
+    if (!obj || !obj->field08)
+        return;
+    uint32_t c = obj->field08->field24;
+    if (c >= 26)
+        return;
+    if (obj->field40 > 0x48)
+        return;
+    uint32_t *tab = character_anitabs2[c];
+    if (tab)
+        obj->field40 = tab[obj->field40];
 }
 
 void get_his_char_ani(MK3OBJ *obj)
 {
+    if (!obj || !obj->field00)
+        return;
     const MK3OBJ *him = (const MK3OBJ *)(uintptr_t)obj->field00->him;
-
-    obj->field40 = character_anitabs1[him->field24][obj->field40];
+    if (!him)
+        return;
+    uint32_t c = him->field24;
+    if (c >= 26)
+        return;
+    if (obj->field40 > 0x48)
+        return;
+    uint32_t *tab = character_anitabs1[c];
+    if (tab)
+        obj->field40 = tab[obj->field40];
 }
 
 
@@ -2543,9 +2571,19 @@ void get_his_char_ani(MK3OBJ *obj)
  */
 void get_his_char_ani2(MK3OBJ *obj)
 {
+    if (!obj || !obj->field00)
+        return;
     const MK3OBJ *him = (const MK3OBJ *)(uintptr_t)obj->field00->him;
-
-    obj->field40 = character_anitabs2[him->field24][obj->field40];
+    if (!him)
+        return;
+    uint32_t c = him->field24;
+    if (c >= 26)
+        return;
+    if (obj->field40 > 0x48)
+        return;
+    uint32_t *tab = character_anitabs2[c];
+    if (tab)
+        obj->field40 = tab[obj->field40];
 }
 
 
@@ -4888,11 +4926,13 @@ long t_upcut_striker(MK3THREAD *thread)
 long t_attk3(MK3THREAD *thread)
 {
     MK3OBJ *obj = (MK3OBJ *)thread->proc;
+    if (!obj)
+        return 0;
 
     if (*mk3_frame(thread, thread->frame + 1) != 0)
         return -3;
 
-    if ((int32_t)obj->field40 <= 0x47)          /* a number, not a pointer */
+    if (obj->field40 <= 0x47)          /* a number, not a pointer */
         get_char_ani(obj);
 
     mk3_frame(thread, thread->frame)[1] = (uint32_t)(uintptr_t)t_attk5;
@@ -8008,6 +8048,8 @@ static long mk3_backwards_ani(MK3THREAD *thread, uint32_t token,
                               void (*resolve)(MK3OBJ *))
 {
     MK3OBJ  *obj  = (MK3OBJ *)thread->proc;
+    if (!obj)
+        return 0;
     uint32_t seen = *mk3_frame(thread, thread->frame + 1);
     uint32_t argc;
 
@@ -8021,7 +8063,7 @@ static long mk3_backwards_ani(MK3THREAD *thread, uint32_t token,
     *mk3_arg(thread, argc) = obj->field1c;      /* left for t_bani2 */
     thread->fieldf8 = argc + 1;
 
-    if ((int32_t)obj->field40 <= 0x48)          /* a number, not a pointer */
+    if (obj->field40 <= 0x48)          /* a number, not a pointer */
         resolve(obj);
 
     *mk3_frame(thread, thread->frame + 1) = token;
@@ -9350,6 +9392,8 @@ long t_clock_ran_out(MK3THREAD *thread)
 long t_flight_loop(MK3THREAD *thread)
 {
     MK3OBJ  *obj   = (MK3OBJ *)thread->proc;
+    if (!obj)
+        return 0;
     uint32_t token = *mk3_frame(thread, thread->frame + 1);
     uint32_t argc;
     int32_t  y, ground;
@@ -9364,7 +9408,7 @@ long t_flight_loop(MK3THREAD *thread)
     }
 
     if (token == 0x1b5) {
-        obj->field34 = *(const uint32_t *)((char *)obj->field00 + 0x34);
+        obj->field34 = (obj->field00) ? *(const uint32_t *)((char *)obj->field00 + 0x34) : 0;
 
         if (obj->field34 != 0) {                /* an optional callback */
             argc = thread->fieldf8;
@@ -9385,9 +9429,9 @@ long t_flight_loop(MK3THREAD *thread)
 
     next_anirate(obj);
 
-    y = (int32_t)(int16_t)MK3_FIELD12(obj->field08);
+    y = (obj->field08) ? (int32_t)(int16_t)MK3_FIELD12(obj->field08) : 0;
     obj->field20 = (uint32_t)y;
-    ground = (int32_t)obj->field00->field40;
+    ground = (obj->field00) ? (int32_t)obj->field00->field40 : 0;
     obj->field1c = (uint32_t)ground;
 
     if (ground > y) {                           /* the floor is still below */
@@ -9397,7 +9441,8 @@ long t_flight_loop(MK3THREAD *thread)
     }
 
     obj->field1c = 0;
-    obj->field08->field20 = 0;
+    if (obj->field08)
+        obj->field08->field20 = 0;
     stop_me_player(obj);
     ground_player(obj);
     return mk3_unwind(thread);
@@ -9650,6 +9695,8 @@ long t_animate_a0_frames(MK3THREAD *thread)
 long t_flight_call(MK3THREAD *thread)
 {
     MK3OBJ  *obj   = (MK3OBJ *)thread->proc;
+    if (!obj)
+        return 0;
     uint32_t token = *mk3_frame(thread, thread->frame + 1);
     uint32_t argc, a;
     int32_t  y, ground;
@@ -9664,17 +9711,19 @@ long t_flight_call(MK3THREAD *thread)
     *mk3_arg(thread, argc) = obj->field28;
     thread->fieldf8 = argc + 1;
 
-    if (obj->field20 != 0xd)                    /* 0xd: leave it alone */
-        obj->field08->field1c = obj->field20;
-    if (obj->field24 != 0xd)
-        obj->field08->field20 = obj->field24;
+    if (obj->field08) {
+        if (obj->field20 != 0xd)                    /* 0xd: leave it alone */
+            obj->field08->field1c = obj->field20;
+        if (obj->field24 != 0xd)
+            obj->field08->field20 = obj->field24;
+    }
     if (obj->field1c != 0xd)
         away_x_vel(obj);
 
     a = obj->field40;
-    if ((int32_t)a <= 0x48) {
+    if (a <= 0x48) {
         get_char_ani(obj);
-    } else if ((uint16_t)a <= 0x47 && ((int32_t)a >> 16) == 1) {
+    } else if ((uint16_t)a <= 0x47 && (a >> 16) == 1) {
         obj->field40 = (uint16_t)a;
         get_char_ani2(obj);
     }
@@ -9686,13 +9735,14 @@ long t_flight_call(MK3THREAD *thread)
         init_anirate(obj);
 
     /* What t_flight_loop will run once a tick, or nothing if it is zero. */
-    *(uint32_t *)((char *)obj->field00 + 0x34) = obj->field34;
+    if (obj->field00)
+        *(uint32_t *)((char *)obj->field00 + 0x34) = obj->field34;
 
-    y = (int32_t)(int16_t)MK3_FIELD12(obj->field08);
+    y = (obj->field08) ? (int32_t)(int16_t)MK3_FIELD12(obj->field08) : 0;
     obj->field20 = (uint32_t)y;
-    ground = (int32_t)obj->field00->field40;
+    ground = (obj->field00) ? (int32_t)obj->field00->field40 : 0;
     obj->field1c = (uint32_t)ground;
-    if (ground < y)                             /* never off the floor */
+    if (ground < y && obj->field08)             /* never off the floor */
         MK3_SET_FIELD12(obj->field08, (uint32_t)ground);
 
     *mk3_frame(thread, thread->frame + 1) = 0x1f9;
@@ -9763,6 +9813,8 @@ long t_flight_call(MK3THREAD *thread)
 long t_gravity_ani(MK3THREAD *thread)
 {
     MK3OBJ  *obj   = (MK3OBJ *)thread->proc;
+    if (!obj)
+        return 0;
     uint32_t token = *mk3_frame(thread, thread->frame + 1);
     uint32_t argc;
 
@@ -9770,9 +9822,10 @@ long t_gravity_ani(MK3THREAD *thread)
         return -3;
 
     if (token == 0) {
-        *(uint32_t *)((char *)obj->field00 + 0x34) = obj->field34;
+        if (obj->field00)
+            *(uint32_t *)((char *)obj->field00 + 0x34) = obj->field34;
 
-        if (obj->field20 != 0)                  /* 0: keep what is set */
+        if (obj->field20 != 0 && obj->field08)                  /* 0: keep what is set */
             obj->field08->field1c = obj->field20;
 
         init_anirate(obj);
@@ -9783,7 +9836,7 @@ long t_gravity_ani(MK3THREAD *thread)
     }
 
     if (token == 0x1684) {
-        obj->field34 = *(const uint32_t *)((char *)obj->field00 + 0x34);
+        obj->field34 = (obj->field00) ? *(const uint32_t *)((char *)obj->field00 + 0x34) : 0;
 
         if (obj->field34 != 0) {                /* the optional callback */
             argc = thread->fieldf8;
@@ -9804,12 +9857,16 @@ long t_gravity_ani(MK3THREAD *thread)
 
     next_anirate(obj);
 
-    obj->field1c = obj->field08->field1c + obj->a10;     /* v += g */
-    obj->field08->field1c = obj->field1c;
+    if (obj->field08) {
+        obj->field1c = obj->field08->field1c + obj->a10;     /* v += g */
+        obj->field08->field1c = obj->field1c;
+    }
+
+    int32_t y = (obj->field08) ? (int32_t)(int16_t)MK3_FIELD12(obj->field08) : 0;
+    int32_t ground = (obj->field00) ? (int32_t)obj->field00->field40 : 0;
 
     if ((int32_t)obj->field1c < 0 ||            /* still rising */
-        (int32_t)(int16_t)MK3_FIELD12(obj->field08)
-            < (int32_t)obj->field00->field40) { /* still above the floor */
+        y < ground) {                           /* still above the floor */
         *mk3_frame(thread, thread->frame + 1) = 0x1684;
         thread->fieldfc = 1;
         return 1;
@@ -9818,7 +9875,8 @@ long t_gravity_ani(MK3THREAD *thread)
     stop_me_player(obj);
     ground_player(obj);
     obj->field1c = 0;
-    obj->field00->p_hit = 0;                    /* landing ends the combo */
+    if (obj->field00)
+        obj->field00->p_hit = 0;                    /* landing ends the combo */
     return mk3_unwind(thread);
 }
 
