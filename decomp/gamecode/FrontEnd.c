@@ -1165,7 +1165,7 @@ void ResetSettingsData(void)
     puts("########### resetting settings data!");
 
     Settings[0] = 1;
-    Settings[1] = 0;
+    Settings[1] = 1;
     Settings[2] = 3;
 
     if (limeCheckForUserMusic())

@@ -70,6 +70,7 @@ public class MainActivity extends SDLActivity {
                     } else {
                         v.vibrate(milliseconds);
                     }
+                    Log.d(TAG, "Vibrated for " + milliseconds + "ms");
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Vibrate error: " + e.getMessage());
