@@ -37,7 +37,17 @@ jobs:
         run: |
           if [ ! -f "logic_tables.c" ] || [ ! -d "res" ]; then
             echo "Downloading UMK3 IPA for tables and assets..."
-            curl -L -o umk3.ipa "https://archive.org/download/ultimate-mortal-kombat-3-v-1.2.59/Ultimate%20Mortal%20Kombat%203%20v1.2.59.ipa"
+            URL="https://archive.org/download/ultimate-mortal-kombat-3-v-1.2.59/Ultimate%20Mortal%20Kombat%203%20v1.2.59.ipa"
+            for attempt in 1 2 3 4 5; do
+              echo "Download attempt $attempt..."
+              curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -L --retry 3 --fail -o umk3.ipa "$URL" || true
+              if [ -f "umk3.ipa" ] && [ $(wc -c < umk3.ipa) -gt 100000000 ]; then
+                echo "Download verified successfully!"
+                break
+              fi
+              echo "Download incomplete, retrying in 5 seconds..."
+              sleep 5
+            done
             
             echo "Extracting IPA..."
             python3 tools/extract_ipa.py umk3.ipa
