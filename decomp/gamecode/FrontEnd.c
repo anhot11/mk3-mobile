@@ -1093,6 +1093,7 @@ int  limeCheckForUserMusic(void);
 
 extern int  g_cfg_widescreen;
 extern int  g_cfg_hd_textures;
+extern long UseLOWAssets;
 void lime_update_texture_filtering(int hd);
 
 static const char g_str_pantalla_title[] =
