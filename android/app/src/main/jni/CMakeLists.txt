@@ -86,6 +86,8 @@ target_compile_definitions(main PRIVATE
     UMK3_SHELL
     _snprintf=snprintf
     _strdup=strdup
+    _stricmp=strcasecmp
+    _strnicmp=strncasecmp
 )
 
 target_compile_options(main PRIVATE

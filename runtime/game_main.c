@@ -80,6 +80,12 @@
 #include <SDL_system.h>
 #endif
 
+#ifndef _WIN32
+#include <strings.h>
+#define _stricmp strcasecmp
+#define _strnicmp strncasecmp
+#endif
+
 #include "platform/platform.h"
 #include "platform/gl.h"
 #include "debug_menu.h"
