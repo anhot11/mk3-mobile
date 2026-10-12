@@ -814,6 +814,14 @@ static void save_dir(char *out, size_t n)
         snprintf(out, n, "%s", e);
         return;
     }
+#if defined(__ANDROID__)
+    extern const char *SDL_AndroidGetInternalStoragePath(void);
+    const char *internal = SDL_AndroidGetInternalStoragePath();
+    if (internal && *internal) {
+        snprintf(out, n, "%s/save", internal);
+        return;
+    }
+#endif
 #ifdef _WIN32
     /* Beside the exe, in `save/`: the game folder holds the build, its `res`
      * and its saves, and nothing lands in %APPDATA%. */

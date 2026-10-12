@@ -211,10 +211,35 @@ TEXTURE *limeLoadTexture(const char *path, int a, int b)
     if (getenv("LIME_TRACE_TEX"))
         fprintf(stderr, "[tex] %s %dx%d\n", path, img.width, img.height);
 
+extern int g_cfg_hd_textures;
+
+#ifndef GL_GENERATE_MIPMAP
+#define GL_GENERATE_MIPMAP 0x8191
+#endif
+#ifndef GL_TEXTURE_MAX_ANISOTROPY_EXT
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
+#endif
+
+static int is_pot(int x)
+{
+    return (x > 0) && ((x & (x - 1)) == 0);
+}
+
     glGenTextures(1, &name);
     glBindTexture(GL_TEXTURE_2D, name);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if (g_cfg_hd_textures) {
+        if (is_pot(img.width) && is_pot(img.height)) {
+            glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        } else {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 4.0f);
+    } else {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
     /* No wrap mode, on purpose. Every glTexParameteri in the binary (PVRTexture
      * createGLTexture, Texture2D initWithData, seven calls in all) sets the
      * filters or GENERATE_MIPMAP and none sets GL_TEXTURE_WRAP_S/T, so every
@@ -249,6 +274,28 @@ void limeDeleteTexture(TEXTURE *tex)
      * dropping the GL object each time would undo the cache above. The whole
      * set goes when the process does. */
     (void)tex;
+}
+
+void lime_update_texture_filtering(int hd)
+{
+    TexEntry *e;
+    for (e = g_textures; e != NULL; e = e->next) {
+        if (!e->tex.name) continue;
+        glBindTexture(GL_TEXTURE_2D, e->tex.name);
+        if (hd) {
+            if (is_pot(e->w) && is_pot(e->h)) {
+                glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            } else {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            }
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 4.0f);
+        } else {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
+    }
 }
 
 

@@ -441,6 +441,8 @@ extern int PortHideControls;           /* GameCode.c: hide_controls=1 */
  * border at the desktop's mode. aspect= is the launcher's: 3:2 (the
  * iPhone's) is the only one so far, and what fit_view always uses.
  * Missing file or keys keep the defaults. */
+extern int  g_cfg_widescreen;
+extern int  g_cfg_hd_textures;
 static int  g_cfg_w = VIRT_W * SCALE, g_cfg_h = VIRT_H * SCALE, g_cfg_full;
 static int  g_cfg_rw, g_cfg_rh, g_cfg_borderless, g_cfg_aa;
 static int  g_cfg_debug_keys;          /* debug_keys=1: F9..F12, see debug_keys() */
@@ -472,6 +474,10 @@ static void read_config(const char *dir)
             g_cfg_full = atoi(v) != 0;
         else if (strcmp(line, "borderless") == 0)
             g_cfg_borderless = atoi(v) != 0;
+        else if (strcmp(line, "widescreen") == 0)
+            g_cfg_widescreen = atoi(v) != 0;
+        else if (strcmp(line, "hd_textures") == 0)
+            g_cfg_hd_textures = atoi(v) != 0;
         else if (strcmp(line, "antialiasing") == 0)
             g_cfg_aa = atoi(v) >= 2 ? (atoi(v) > 16 ? 16 : atoi(v)) : 0;
         else if (strcmp(line, "render_width") == 0)
@@ -1051,6 +1057,13 @@ static void debug_request(const struct dbg_request *rq)
  * 480x320 screen, so a fullscreen 16:9 monitor gets bars, not a stretch. */
 static void fit_view(int ww, int wh, int *vx, int *vy, int *vw, int *vh)
 {
+    if (g_cfg_widescreen) {
+        *vx = 0;
+        *vy = 0;
+        *vw = ww;
+        *vh = wh;
+        return;
+    }
     if ((long)ww * VIRT_H > (long)wh * VIRT_W) {
         *vh = wh;
         *vw = (int)((long)wh * VIRT_W / VIRT_H);
@@ -1114,9 +1127,13 @@ int main(int argc, char **argv)
     static char android_res[512];
     const char *internal = SDL_AndroidGetInternalStoragePath();
     if (internal) {
+        char ini_dir[512];
         snprintf(android_res, sizeof(android_res), "%s/res", internal);
         root = android_res;
         lime_platform_set_asset_root(android_res);
+
+        snprintf(ini_dir, sizeof(ini_dir), "%s/", internal);
+        read_config(ini_dir);
     }
 #endif
     const char *shot = getenv("UMK3_SHOT");

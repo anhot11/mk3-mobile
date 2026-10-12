@@ -1091,6 +1091,17 @@ extern int  Settings[10];               /* 0x00100e34 */
 extern int  limeScreenHeight;           /* pointer slot -> 0x00171af0 */
 int  limeCheckForUserMusic(void);
 
+extern int  g_cfg_widescreen;
+extern int  g_cfg_hd_textures;
+void lime_update_texture_filtering(int hd);
+
+static const char g_str_pantalla_title[] =
+    "\xff\xfe" "P\0A\0N\0T\0A\0L\0L\0A\0 \0Y\0 \0G\0R\0A\0F\0I\0C\0O\0S\0\0\0";
+static const char g_str_opt_fullscreen[] =
+    "\xff\xfe" "P\0A\0N\0T\0A\0L\0L\0A\0 \0C\0O\0M\0P\0L\0E\0T\0A\0\0\0";
+static const char g_str_opt_hdtextures[] =
+    "\xff\xfe" "T\0E\0X\0T\0U\0R\0A\0S\0 \0E\0N\0 \0H\0D\0\0\0";
+
 
 /* ----------------------------------------------------------- Write_SettingsData
  *
@@ -1113,6 +1124,9 @@ int  limeCheckForUserMusic(void);
 void Write_SettingsData(void)
 {
     int i;
+
+    Settings[8] = g_cfg_widescreen;
+    Settings[7] = g_cfg_hd_textures;
 
     puts("######### writing settings data");
     limeWriteFile("settingsdata", Settings, 0x28, 0);
@@ -1163,6 +1177,10 @@ void ResetSettingsData(void)
     Settings[7] = 1;
     Settings[8] = 1;
     Settings[9] = 1;
+
+    g_cfg_widescreen = Settings[8];
+    g_cfg_hd_textures = Settings[7];
+    UseLOWAssets = g_cfg_hd_textures ? 0 : 1;
 }
 
 
@@ -1466,6 +1484,10 @@ void Load_SettingsData(void)
 
     for (i = 0; i < 0x28 / 4; i++)
         Settings[i] = (int)src[i];
+
+    g_cfg_widescreen = Settings[8];
+    g_cfg_hd_textures = Settings[7];
+    UseLOWAssets = g_cfg_hd_textures ? 0 : 1;
 
     printf("%d\n", Settings[7]);
     printf("%d\n", Settings[8]);
@@ -1797,7 +1819,7 @@ void SetupFEScale(void)
 
     HUD_Scale = (FE_WidthScale >= 2.0f) ? 1.75f : 1.0f;
 
-    UseLOWAssets = (w == 480) ? 1 : 0;           /* exactly 480, not <= */
+    UseLOWAssets = g_cfg_hd_textures ? 0 : ((w == 480) ? 1 : 0);
 }
 
 
@@ -4525,19 +4547,22 @@ void FE_Task_Manage_Social_Features(void)
                    (float)limeScreenWidth, (float)limeScreenHeight,
                    0.0f, 0.0234375f, 1.0f, 0.703125f, col);
 
-    if (socialConnectionAvailable == -1)
-        socialConnectionAvailable = EASDK_ConnectedToNetwork();
-
     choice = drawPage2x1Wide(0, 0);
 
-    limeDrawFONT(&GameFont, GameText(0xe8), (float)FE_X(240.0f),
+    /* Page title */
+    limeDrawFONT(&GameFont, g_str_pantalla_title, (float)FE_X(240.0f),
+                 (float)FE_Y(18.0f), 1, FE_WidthScale, fontcol);
+
+    /* Option 1: Fullscreen Widescreen */
+    limeDrawFONT(&GameFont, g_str_opt_fullscreen, (float)FE_X(240.0f),
                  (float)FE_Y(44.0f), 1, FE_WidthScale, fontcol);
 
     limeDrawFONT(&GameFont, GameText(Settings[8] ? 0xe1 : 0xe2),
                  (float)FE_X(240.0f), (float)FE_Y(60.0f),
                  1, FE_WidthScale, fontcol);
 
-    limeDrawFONT(&GameFont, GameText(0x396), (float)FE_X(240.0f),
+    /* Option 2: HD Textures */
+    limeDrawFONT(&GameFont, g_str_opt_hdtextures, (float)FE_X(240.0f),
                  (float)FE_Y(144.0f), 1, FE_WidthScale, fontcol);
 
     limeDrawFONT(&GameFont, GameText(Settings[7] ? 0xe1 : 0xe2),
@@ -4546,8 +4571,14 @@ void FE_Task_Manage_Social_Features(void)
 
     if (choice == 1) {
         Settings[8] ^= 1;
+        g_cfg_widescreen = Settings[8];
+        Write_SettingsData();
     } else if (choice == 2) {
         Settings[7] ^= 1;
+        g_cfg_hd_textures = Settings[7];
+        UseLOWAssets = g_cfg_hd_textures ? 0 : 1;
+        lime_update_texture_filtering(g_cfg_hd_textures);
+        Write_SettingsData();
     } else if (choice == 5) {
         PopFETaskDeferred();
         Write_SettingsData();
@@ -7176,7 +7207,7 @@ void FE_Task_Options(void)
         sel = 2;
 
     LastTouch_Options3 = Touch_Options3;
-    Touch_Options3 = DrawOptionAsButton(GameText(0xca),
+    Touch_Options3 = DrawOptionAsButton(g_str_pantalla_title,
                                         FESlideOffset * FEOPT_SLIDE_SPAN
                                             + FEOPT_OPTION_X,
                                         FEOPT_ROW3, FEOPT_OPTION_SCALE,

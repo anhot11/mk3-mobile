@@ -19172,6 +19172,8 @@ float TreasureSelectTime;  /* 0x0010118c */
 long TreasureSelected = 0xffffffff;  /* 0x00101160 */
 long UCPtr;  /* 0x00178034 */
 long UseLOWAssets;  /* 0x0010df10 */
+int g_cfg_widescreen = 1;
+int g_cfg_hd_textures = 1;
 int VSAssetsLoaded;  /* 0x000ff9a8 */
 float VSScroll = 256.0f;  /* 0x000ff9a4 */
 void *VSTexture;  /* 0x00183f10 */
