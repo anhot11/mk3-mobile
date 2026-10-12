@@ -1122,7 +1122,6 @@ static void on_plat_touch(int type, int finger_id, float norm_x, float norm_y)
 
 static void on_plat_back(void)
 {
-    extern long FE_TaskStackPointer;
     void PopFETaskDeferred(void);
     if (FE_TaskStackPointer > 0) {
         PopFETaskDeferred();
