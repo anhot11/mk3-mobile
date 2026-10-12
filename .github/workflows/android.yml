@@ -39,35 +39,14 @@ jobs:
             echo "Downloading UMK3 IPA for tables and assets..."
             curl -L -o umk3.ipa "https://archive.org/download/ultimate-mortal-kombat-3-v-1.2.59/Ultimate%20Mortal%20Kombat%203%20v1.2.59.ipa"
             
-            echo "Extracting binary..."
-            python3 -c "
-            import zipfile
-            with zipfile.ZipFile('umk3.ipa', 'r') as z:
-                z.extract('Payload/UMK3.app/UMK3', '.')
-            "
+            echo "Extracting IPA..."
+            python3 tools/extract_ipa.py umk3.ipa
             
             echo "Generating data tables..."
             python3 tools/logic_tables.py Payload/UMK3.app/UMK3 logic_tables.c --report logic_tables_report.txt
             python3 tools/level_info.py Payload/UMK3.app/UMK3 level_info.c
             python3 tools/seq_data.py Payload/UMK3.app/UMK3 seq_data.c
             
-            echo "Extracting res assets..."
-            python3 -c "
-            import zipfile, os
-            os.makedirs('res', exist_ok=True)
-            with zipfile.ZipFile('umk3.ipa', 'r') as z:
-                prefix = 'Payload/UMK3.app/res/'
-                for item in z.infolist():
-                    if item.filename.startswith(prefix) and not item.is_dir():
-                        rel = item.filename[len(prefix):]
-                        target = os.path.join('res', rel)
-                        os.makedirs(os.path.dirname(target), exist_ok=True)
-                        with z.open(item) as src, open(target, 'wb') as dst:
-                            dst.write(src.read())
-                    elif item.filename == 'Payload/UMK3.app/Info.plist':
-                        with z.open(item) as src, open('Info.plist', 'wb') as dst:
-                            dst.write(src.read())
-            "
             rm -f umk3.ipa
             rm -rf Payload
           fi
