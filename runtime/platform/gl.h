@@ -35,6 +35,60 @@
 #elif defined(__ANDROID__)
 #  include <GLES/gl.h>
 #  include <GLES/glext.h>
+
+#  define GL_QUADS 0x0007
+#  define glOrtho(l, r, b, t, n, f) glOrthof((GLfloat)(l), (GLfloat)(r), (GLfloat)(b), (GLfloat)(t), (GLfloat)(n), (GLfloat)(f))
+#  define glClearDepth(d) glClearDepthf((GLclampf)(d))
+#  define glFrustum(l, r, b, t, n, f) glFrustumf((GLfloat)(l), (GLfloat)(r), (GLfloat)(b), (GLfloat)(t), (GLfloat)(n), (GLfloat)(f))
+
+typedef struct {
+    GLfloat x, y;
+    GLfloat u, v;
+} gles_compat_vert_t;
+
+static gles_compat_vert_t g_gles_vbuf[8];
+static int g_gles_vcount = 0;
+static GLfloat g_gles_cur_u = 0.0f, g_gles_cur_v = 0.0f;
+
+static inline void glTexCoord2f(GLfloat u, GLfloat v) {
+    g_gles_cur_u = u;
+    g_gles_cur_v = v;
+}
+
+static inline void glVertex2f(GLfloat x, GLfloat y) {
+    if (g_gles_vcount < 8) {
+        g_gles_vbuf[g_gles_vcount].x = x;
+        g_gles_vbuf[g_gles_vcount].y = y;
+        g_gles_vbuf[g_gles_vcount].u = g_gles_cur_u;
+        g_gles_vbuf[g_gles_vcount].v = g_gles_cur_v;
+        g_gles_vcount++;
+    }
+}
+
+static inline void glBegin(GLenum mode) {
+    (void)mode;
+    g_gles_vcount = 0;
+}
+
+static inline void glEnd(void) {
+    if (g_gles_vcount > 0) {
+        GLfloat pos[16], tex[16];
+        for (int i = 0; i < g_gles_vcount; i++) {
+            pos[i*2] = g_gles_vbuf[i].x;
+            pos[i*2+1] = g_gles_vbuf[i].y;
+            tex[i*2] = g_gles_vbuf[i].u;
+            tex[i*2+1] = g_gles_vbuf[i].v;
+        }
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glVertexPointer(2, GL_FLOAT, 0, pos);
+        glTexCoordPointer(2, GL_FLOAT, 0, tex);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, g_gles_vcount);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        g_gles_vcount = 0;
+    }
+}
 #else
 #  include <GL/gl.h>
 #endif
