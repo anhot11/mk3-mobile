@@ -80,7 +80,10 @@ public class MainActivity extends SDLActivity {
     private void copyAssetsToInternalStorage() {
         SharedPreferences prefs = getSharedPreferences("umk3_prefs", MODE_PRIVATE);
         int lastExtractedVersion = prefs.getInt("extracted_version", -1);
-        int currentVersion = BuildConfig.VERSION_CODE;
+        int currentVersion = 2;
+        try {
+            currentVersion = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+        } catch (Exception ignored) {}
 
         File internalRes = new File(getFilesDir(), "res");
         File probeFile = new File(internalRes, "Info.plist");
