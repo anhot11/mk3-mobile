@@ -970,6 +970,7 @@ void limeModalNoInternet(void) { (void)ask(0x3b5, 0x3b6, 0xc, 0); }
 #else
 long limeModalAreYouSure(void) { return 0; }
 void limeModalNoInternet(void) { }
+#endif
 void limeStartLoadingAnim(void)            { }
 void limeStopLoadingAnim(void)             { }
 void plat_vibrate(int ms);
