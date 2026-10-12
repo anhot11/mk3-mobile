@@ -69,6 +69,7 @@ jobs:
           fi
           if [ -f "Info.plist" ]; then
             cp Info.plist android/app/src/main/assets/
+            cp Info.plist android/app/src/main/assets/res/
           fi
 
       - name: Setup Gradle

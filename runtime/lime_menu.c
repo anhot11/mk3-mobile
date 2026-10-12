@@ -665,11 +665,16 @@ static void plist_load(void)
     /* On device Info.plist sits beside res/; the game folder keeps its copy
      * inside res/, so the port reads nothing outside its own folder. */
     root = lime_platform_asset_root();
-    if (root == NULL || *root == 0)
-        return;
-    snprintf(path, sizeof(path), "%s/Info.plist", root);
-
-    f = fopen(path, "rb");
+    if (root != NULL && *root != 0) {
+        snprintf(path, sizeof(path), "%s/Info.plist", root);
+        f = fopen(path, "rb");
+        if (f == NULL) {
+            snprintf(path, sizeof(path), "%s/../Info.plist", root);
+            f = fopen(path, "rb");
+        }
+    }
+    if (f == NULL)
+        f = fopen("Info.plist", "rb");
     if (f == NULL)
         return;
     fseek(f, 0, SEEK_END);
@@ -718,11 +723,23 @@ const char *limeGetPropertyString(const char *key)
         }
     }
 
-    /* FE_Task_About_About prints this into "Version: %s". The binary this was
-     * read from is 1.2.59, and it is the one answer worth keeping when the
-     * plist is not where the assets are. */
-    if (g_plist == NULL && strcmp(key, "CFBundleVersion") == 0)
+    /* Fallback answers when Info.plist is absent or key is missing */
+    if (strcmp(key, "CFBundleVersion") == 0)
         return "1.2.59";
+    if (strcmp(key, "LANGUAGE_TEXT_EN") == 0 || strcmp(key, "LANGUAGE_TEXT_OTHER") == 0)
+        return "english_text.dat";
+    if (strcmp(key, "LANGUAGE_TEXT_ES") == 0)
+        return "spanish_text.dat";
+    if (strcmp(key, "LANGUAGE_TEXT_FR") == 0)
+        return "french_text.dat";
+    if (strcmp(key, "LANGUAGE_TEXT_DE") == 0)
+        return "german_text.dat";
+    if (strcmp(key, "LANGUAGE_TEXT_IT") == 0)
+        return "italian_text.dat";
+    if (strcmp(key, "LANGUAGE_TEXT_KO") == 0)
+        return "korean_text.dat";
+    if (strcmp(key, "LANGUAGE_TEXT_ZH") == 0)
+        return "chinese_text.dat";
     return NULL;
 }
 

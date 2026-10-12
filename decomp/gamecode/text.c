@@ -689,11 +689,18 @@ void  limeFree(void *p);
  */
 void LoadTextData(const char *file)
 {
+    if (!file)
+        file = "english_text.dat";
     long size = limeFileSize(file);
     const unsigned char *data = (const unsigned char *)limeLoadFile(file);
     const unsigned char *src;
     char *dst;
     long count, i;
+
+    if (!data || size < 8) {
+        printf("LoadTextData: failed to load %s\n", file);
+        return;
+    }
 
     count = (short)(data[6] | (data[7] << 8));
 

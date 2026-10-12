@@ -73,6 +73,10 @@ void lime_platform_set_asset_root(const char *path)
  * copied into res/ when the game folder is set up (launcher/setup_res.ps1). */
 static void resolve(const char *rel, char *out, size_t n)
 {
+    if (!rel || n == 0) {
+        if (out && n > 0) out[0] = '\0';
+        return;
+    }
     if (g_lime_asset_root[0] == '\0') {
         snprintf(out, n, "%s", rel);
         return;
@@ -97,6 +101,9 @@ size_t limeFileSize(const char *path)
     FILE *f;
     long n;
 
+    if (!path)
+        return 0;
+
     resolve(path, full, sizeof(full));
     f = fopen(full, "rb");
     if (!f)
@@ -117,6 +124,9 @@ void *limeLoadFile(const char *path)
     FILE *f;
     long n;
     void *p;
+
+    if (!path)
+        return NULL;
 
     if (getenv("LIME_HEAP_CHECK"))
         lime_heap_check(path);
