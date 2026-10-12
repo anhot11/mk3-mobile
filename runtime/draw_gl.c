@@ -91,6 +91,20 @@ void lime_gl_set_screen(int w, int h)
  * Every distinct path is loaded once and kept. The menus re-request the same
  * sheets every frame and a texture upload per frame would be visible.
  */
+extern int g_cfg_hd_textures;
+
+#ifndef GL_GENERATE_MIPMAP
+#define GL_GENERATE_MIPMAP 0x8191
+#endif
+#ifndef GL_TEXTURE_MAX_ANISOTROPY_EXT
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
+#endif
+
+static int is_pot(int x)
+{
+    return (x > 0) && ((x & (x - 1)) == 0);
+}
+
 typedef struct TexEntry {
     struct TexEntry *next;
     char            *path;
@@ -210,20 +224,6 @@ TEXTURE *limeLoadTexture(const char *path, int a, int b)
     }
     if (getenv("LIME_TRACE_TEX"))
         fprintf(stderr, "[tex] %s %dx%d\n", path, img.width, img.height);
-
-extern int g_cfg_hd_textures;
-
-#ifndef GL_GENERATE_MIPMAP
-#define GL_GENERATE_MIPMAP 0x8191
-#endif
-#ifndef GL_TEXTURE_MAX_ANISOTROPY_EXT
-#define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
-#endif
-
-static int is_pot(int x)
-{
-    return (x > 0) && ((x & (x - 1)) == 0);
-}
 
     glGenTextures(1, &name);
     glBindTexture(GL_TEXTURE_2D, name);
