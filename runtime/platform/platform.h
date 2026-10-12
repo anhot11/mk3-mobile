@@ -36,6 +36,7 @@ void *plat_gl_proc(const char *name);
 /* Called with 1 as plat_ask starts and 0 as it returns, so the game can put
  * its frame on the window first and go back to where it draws after. */
 extern void (*plat_ask_hook)(int begin);
+extern void (*plat_touch_hook)(int type, int finger_id, float norm_x, float norm_y);
 
 /* Pump the OS event queue. Returns false once the user has asked to quit. */
 bool plat_poll(void);

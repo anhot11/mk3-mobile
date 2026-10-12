@@ -1062,6 +1062,51 @@ static void fit_view(int ww, int wh, int *vx, int *vy, int *vw, int *vh)
     *vy = (wh - *vh) / 2;
 }
 
+static int g_has_touch_events = 0;
+
+static void on_plat_touch(int type, int finger_id, float norm_x, float norm_y)
+{
+    int ww, wh, vx, vy, vw, vh;
+    float sx, sy, tx, ty;
+    static float prev_tx[10] = { -1.0f,-1.0f,-1.0f,-1.0f,-1.0f,-1.0f,-1.0f,-1.0f,-1.0f,-1.0f };
+    static float prev_ty[10] = { -1.0f,-1.0f,-1.0f,-1.0f,-1.0f,-1.0f,-1.0f,-1.0f,-1.0f,-1.0f };
+
+    plat_size(&ww, &wh);
+    fit_view(ww, wh, &vx, &vy, &vw, &vh);
+
+    sx = norm_x * (float)ww;
+    sy = norm_y * (float)wh;
+    tx = (sx - (float)vx) * (float)VIRT_W / (float)(vw ? vw : 1);
+    ty = (sy - (float)vy) * (float)VIRT_H / (float)(vh ? vh : 1);
+
+    g_has_touch_events = 1;
+    if (finger_id < 0 || finger_id >= 10) return;
+
+    if (dbg_menu_is_open()) {
+        dbg_menu_mouse(tx, ty, type != 2);
+    }
+
+    if (type == 0) { /* BEGAN */
+        lime_touch_began(tx, ty);
+        prev_tx[finger_id] = tx;
+        prev_ty[finger_id] = ty;
+    } else if (type == 1) { /* MOVED */
+        if (prev_tx[finger_id] >= 0.0f)
+            lime_touch_moved(tx, ty, prev_tx[finger_id], prev_ty[finger_id]);
+        else
+            lime_touch_began(tx, ty);
+        prev_tx[finger_id] = tx;
+        prev_ty[finger_id] = ty;
+    } else if (type == 2) { /* ENDED */
+        if (prev_tx[finger_id] >= 0.0f)
+            lime_touch_ended(tx, ty, prev_tx[finger_id], prev_ty[finger_id]);
+        else
+            lime_touch_ended(tx, ty, tx, ty);
+        prev_tx[finger_id] = -1.0f;
+        prev_ty[finger_id] = -1.0f;
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *root = (argc > 1 && argv[1][0] != '-') ? argv[1] : "res";
@@ -1196,6 +1241,7 @@ int main(int argc, char **argv)
     umk3_relocate_level_info();
     GameCodeInit();
 
+    plat_touch_hook = on_plat_touch;
     last = plat_time();
     while (plat_poll()) {
         int mx, my, down, ww, wh, vx, vy, vw, vh;
@@ -1232,27 +1278,29 @@ int main(int argc, char **argv)
         /* The mouse as one finger, on its edges; see runtime/menu_main.c. */
         /* A scripted run is the script's alone: a click on the window
          * would be a second finger nobody asked for. */
-        down = plat_mouse(&mx, &my) && g_ntaps == 0 && !dbg_menu_is_open();
-        {
-            static float prev_tx = -1.0f, prev_ty = -1.0f;
-            float tx = (float)(mx - vx) * VIRT_W / (vw ? vw : 1);
-            float ty = (float)(my - vy) * VIRT_H / (vh ? vh : 1);
+        if (!g_has_touch_events) {
+            down = plat_mouse(&mx, &my) && g_ntaps == 0 && !dbg_menu_is_open();
+            {
+                static float prev_tx = -1.0f, prev_ty = -1.0f;
+                float tx = (float)(mx - vx) * VIRT_W / (vw ? vw : 1);
+                float ty = (float)(my - vy) * VIRT_H / (vh ? vh : 1);
 
-            if (dbg_menu_is_open())     /* the debug menu takes the mouse */
-                dbg_menu_mouse(tx, ty, plat_mouse(&mx, &my) && g_ntaps == 0);
+                if (dbg_menu_is_open())     /* the debug menu takes the mouse */
+                    dbg_menu_mouse(tx, ty, plat_mouse(&mx, &my) && g_ntaps == 0);
 
-            if (down && !was_down)
-                lime_touch_began(tx, ty);
-            else if (down && (tx != prev_tx || ty != prev_ty))
-                lime_touch_moved(tx, ty, prev_tx, prev_ty);
-            else if (!down && was_down)
-                lime_touch_ended(prev_tx, prev_ty, prev_tx, prev_ty);
-            if (down) {
-                prev_tx = tx;
-                prev_ty = ty;
+                if (down && !was_down)
+                    lime_touch_began(tx, ty);
+                else if (down && (tx != prev_tx || ty != prev_ty))
+                    lime_touch_moved(tx, ty, prev_tx, prev_ty);
+                else if (!down && was_down)
+                    lime_touch_ended(prev_tx, prev_ty, prev_tx, prev_ty);
+                if (down) {
+                    prev_tx = tx;
+                    prev_ty = ty;
+                }
             }
+            was_down = down;
         }
-        was_down = down;
 
         while (acc >= 1.0 / 60.0) {
             int i;

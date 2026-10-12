@@ -11,6 +11,8 @@
 
 #include <stdint.h>
 #include <string.h>   /* strlen, for asciiToUnicode */
+#include <stdarg.h>
+#include <stdio.h>
 
 uint32_t decodeLHWord(const char *p);
 int      putUnicodeChar(char *dst, uint32_t ch);
@@ -388,7 +390,7 @@ int printf(const char *fmt, ...);
  *
  * Returns 0 always.
  */
-long initArguments(long count, const long *args)
+long initArguments(long count, va_list ap)
 {
     long i;
 
@@ -398,18 +400,21 @@ long initArguments(long count, const long *args)
         switch (t->type) {
         case 1:
         case 2:
-            t->value.word = *args++;
+            t->value.word = (long)va_arg(ap, uintptr_t);
             break;
 
         case 3:                         /* halfword into the low half only */
-            t->value.half = (short)*args;   /* strh: top half untouched */
-            args++;
+            t->value.half = (short)va_arg(ap, int);
             break;
 
         case 4:                         /* a double: two words */
-            t->value.word = args[0];
-            t->value2     = args[1];
-            args += 2;
+            {
+                double d = va_arg(ap, double);
+                uint64_t u64;
+                memcpy(&u64, &d, sizeof(double));
+                t->value.word = (long)(u64 & 0xFFFFFFFF);
+                t->value2     = (long)(u64 >> 32);
+            }
             break;
 
         default:
@@ -619,11 +624,9 @@ long processString(char *dst, const char *fmt, long len, const long *args,
  */
 long usprintf(char *dst, const char *fmt, ...)
 {
-    /* The varargs are pushed as a block by the prologue -- `push {r1, r2, r3}`
-     * before the frame -- so `args` is that block, read as words. */
-    const long *args = (const long *)((const char *)&fmt + sizeof fmt);
     long len, n;
     int i;
+    va_list ap;
 
     while (g_usprintfSemaphore != 0)
         puts("\n<<< Waiting for g_usprintfSemaphore! >>>");
@@ -636,9 +639,11 @@ long usprintf(char *dst, const char *fmt, ...)
     }
 
     len = strLenUnicode(fmt);
-    n   = processString(dst, fmt, len, args, 1);
-    initArguments(n, args);
-    processString(dst, fmt, len, args, 0);
+    n   = processString(dst, fmt, len, NULL, 1);
+    va_start(ap, fmt);
+    initArguments(n, ap);
+    va_end(ap);
+    processString(dst, fmt, len, NULL, 0);
 
     g_usprintfSemaphore = 0;
     return 0;

@@ -114,6 +114,26 @@ void *plat_gl_proc(const char *name)
 }
 
 void (*plat_ask_hook)(int begin);
+void (*plat_touch_hook)(int type, int finger_id, float norm_x, float norm_y);
+
+static SDL_FingerID g_finger_ids[10];
+static int g_finger_active[10];
+
+static int get_finger_slot(SDL_FingerID id, int create) {
+    int i;
+    for (i = 0; i < 10; i++) {
+        if (g_finger_active[i] && g_finger_ids[i] == id) return i;
+    }
+    if (!create) return -1;
+    for (i = 0; i < 10; i++) {
+        if (!g_finger_active[i]) {
+            g_finger_active[i] = 1;
+            g_finger_ids[i] = id;
+            return i;
+        }
+    }
+    return -1;
+}
 
 bool plat_poll(void)
 {
@@ -124,6 +144,19 @@ bool plat_poll(void)
             g_quit = true;
             break;
         case SDL_KEYDOWN:
+            break;
+        case SDL_FINGERDOWN:
+        case SDL_FINGERMOTION:
+        case SDL_FINGERUP:
+            if (plat_touch_hook) {
+                int type = (ev.type == SDL_FINGERDOWN) ? 0 :
+                           (ev.type == SDL_FINGERMOTION) ? 1 : 2;
+                int slot = get_finger_slot(ev.tfinger.fingerId, type == 0);
+                if (slot >= 0) {
+                    plat_touch_hook(type, slot, ev.tfinger.x, ev.tfinger.y);
+                    if (type == 2) g_finger_active[slot] = 0;
+                }
+            }
             break;
         case SDL_WINDOWEVENT:
             if (ev.window.event == SDL_WINDOWEVENT_CLOSE) {
