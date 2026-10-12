@@ -75,6 +75,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __ANDROID__
+#include <SDL.h>
+#include <SDL_system.h>
+#endif
+
 #include "platform/platform.h"
 #include "platform/gl.h"
 #include "debug_menu.h"
@@ -1054,6 +1059,15 @@ static void fit_view(int ww, int wh, int *vx, int *vy, int *vw, int *vh)
 int main(int argc, char **argv)
 {
     const char *root = (argc > 1 && argv[1][0] != '-') ? argv[1] : "res";
+#if defined(__ANDROID__)
+    static char android_res[512];
+    const char *internal = SDL_AndroidGetInternalStoragePath();
+    if (internal) {
+        snprintf(android_res, sizeof(android_res), "%s/res", internal);
+        root = android_res;
+        lime_platform_set_asset_root(android_res);
+    }
+#endif
     const char *shot = getenv("UMK3_SHOT");
     int    shot_at = shot ? atoi(shot) : 0;
     int    log_tasks = getenv("UMK3_LOG_TASKS") != NULL;

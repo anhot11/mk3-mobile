@@ -32,6 +32,9 @@
 #  include <GL/gl.h>
 #elif defined(__APPLE__)
 #  include <OpenGL/gl.h>
+#elif defined(__ANDROID__)
+#  include <GLES/gl.h>
+#  include <GLES/glext.h>
 #else
 #  include <GL/gl.h>
 #endif
