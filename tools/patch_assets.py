@@ -24,14 +24,12 @@ def patch_fenew1(res_dir):
             os.remove(p)
             print(f"Removed stale {pvr}")
 
-    # Wipe only the lower 2 tombstones (y >= 480 in 1024x1024 space)
-    for p in [fenew1_path, fenew1_low]:
-        if os.path.exists(p):
-            im = Image.open(p).convert('RGBA')
-            draw = ImageDraw.Draw(im)
-            draw.rectangle([0, 480, 512, 768], fill=(0, 0, 0, 0))
-            im.save(p)
-            print(f"{os.path.basename(p)} patched (3 clean tombstones preserved).")
+    src_clean = os.path.join(os.path.dirname(__file__), 'FENEW1.PNG')
+    if os.path.exists(src_clean):
+        im = Image.open(src_clean)
+        im.save(fenew1_path)
+        im.save(fenew1_low)
+        print("FENEW1.PNG and FENEW1_LOW.PNG updated with 3 clean tombstones.")
 
 def patch_hud(res_dir):
     hud_path = os.path.join(res_dir, 'Textures', 'HUD_TPAGE.PNG')
