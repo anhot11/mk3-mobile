@@ -35,7 +35,7 @@ jobs:
 
       - name: Prepare Game Assets and Data Tables
         run: |
-          if [ ! -f "logic_tables.c" ] || [ ! -d "res" ]; then
+          if [ ! -f "logic_tables.c" ] || [ ! -d "res/audio" ]; then
             echo "Downloading UMK3 IPA for tables and assets..."
             URL="https://archive.org/download/ultimate-mortal-kombat-3-v-1.2.59/Ultimate%20Mortal%20Kombat%203%20v1.2.59.ipa"
             for attempt in 1 2 3 4 5; do
