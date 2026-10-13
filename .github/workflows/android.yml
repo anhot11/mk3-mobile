@@ -65,6 +65,9 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets
           if [ -d "res" ]; then
+            echo "Generating 4K modern horror touch controls atlas..."
+            python3 tools/generate_controls_atlas.py res/Textures/BUTTONS_TPAGE.PNG
+            cp res/Textures/BUTTONS_TPAGE.PNG res/Textures/BUTTONS_TPAGE_IPAD.PNG
             cp -r res android/app/src/main/assets/
           fi
           if [ -f "Info.plist" ]; then

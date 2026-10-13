@@ -1174,7 +1174,7 @@ void ResetSettingsData(void)
     Settings[4] = 5;
     Settings[3] = 3;
     Settings[5] = 0;
-    Settings[6] = 100;                  /* built as 5 + 0x5f */
+    Settings[6] = 1;
     Settings[7] = 1;
     Settings[8] = 1;
     Settings[9] = 1;

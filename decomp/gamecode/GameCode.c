@@ -8703,9 +8703,16 @@ void DrawControls(void)
     }
 
     /* ---- the opacity setting moves two of the three alphas ---- */
-    buttonCol[3]  = (Settings[6] == 1) ? 0.75f
-                  : (Settings[6] == 2) ? 1.0f : 0.5f;
-    joyBaseCol[3] = buttonCol[3] * 0.5f;
+    if (Settings[6] == 0) {
+        buttonCol[3]  = 0.70f;
+        joyBaseCol[3] = 0.60f;
+    } else if (Settings[6] == 2) {
+        buttonCol[3]  = 1.00f;
+        joyBaseCol[3] = 0.85f;
+    } else {
+        buttonCol[3]  = 0.85f;
+        joyBaseCol[3] = 0.75f;
+    }
 
     /* ---- where the stick goes ---- */
     JoystickStatePosX = (long)ButtonSize;
