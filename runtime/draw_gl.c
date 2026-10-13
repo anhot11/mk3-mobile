@@ -496,6 +496,68 @@ void limeFillRect(float x, float y, float w, float h,
     g_fills++;
 }
 
+extern int g_cfg_crt_filter;
+static GLuint g_crt_texture = 0;
+
+void draw_crt_scanlines(int screen_w, int screen_h)
+{
+    float num_lines;
+
+    if (!g_cfg_crt_filter) return;
+    if (screen_w <= 0 || screen_h <= 0) return;
+
+    if (!g_crt_texture) {
+        /* Generate 1x4 CRT scanline pattern: 2 lines full bright, 2 lines subtle scanline shadow */
+        static const unsigned char crt_pattern[4 * 4] = {
+            255, 255, 255, 255,
+            255, 255, 255, 255,
+            185, 185, 185, 255,
+            185, 185, 185, 255
+        };
+        glGenTextures(1, &g_crt_texture);
+        glBindTexture(GL_TEXTURE_2D, g_crt_texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 4, 0, GL_RGBA, GL_UNSIGNED_BYTE, crt_pattern);
+    }
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0.0, (double)screen_w, (double)screen_h, 0.0, -1.0, 1.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_DST_COLOR, GL_ZERO); /* Multiplicative raster overlay */
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, g_crt_texture);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+    num_lines = (float)screen_h / 4.0f;
+    glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 0.0f);        glVertex2f(0.0f, 0.0f);
+        glTexCoord2f(1.0f, 0.0f);        glVertex2f((float)screen_w, 0.0f);
+        glTexCoord2f(1.0f, num_lines);   glVertex2f((float)screen_w, (float)screen_h);
+        glTexCoord2f(0.0f, num_lines);   glVertex2f(0.0f, (float)screen_h);
+    glEnd();
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
+}
+
 
 /* The character models on the select screen go through the array pointers and
  * `glDrawElements`, all of which opengl32 provides unchanged. Nothing to add

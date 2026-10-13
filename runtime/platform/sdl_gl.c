@@ -197,9 +197,15 @@ bool plat_poll(void)
     return !g_quit;
 }
 
+extern void draw_crt_scanlines(int screen_w, int screen_h);
+
 bool plat_swap(void)
 {
+    int dw = 0, dh = 0;
     if (!g_wnd) return false;
+    SDL_GL_GetDrawableSize(g_wnd, &dw, &dh);
+    if (dw > 0 && dh > 0)
+        draw_crt_scanlines(dw, dh);
     SDL_GL_SwapWindow(g_wnd);
     return true;
 }

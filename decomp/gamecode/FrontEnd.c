@@ -1093,15 +1093,18 @@ int  limeCheckForUserMusic(void);
 
 extern int  g_cfg_widescreen;
 extern int  g_cfg_hd_textures;
+extern int  g_cfg_crt_filter;
 extern long UseLOWAssets;
 void lime_update_texture_filtering(int hd);
 
 static const char g_str_pantalla_title[] =
-    "\xff\xfe" "P\0A\0N\0T\0A\0L\0L\0A\0 \0Y\0 \0G\0R\0A\0F\0I\0C\0O\0S\0\0\0";
+    "\xff\xfe" "A\0J\0U\0S\0T\0E\0S\0 \0V\0I\0D\0E\0O\0\0\0";
 static const char g_str_opt_fullscreen[] =
     "\xff\xfe" "P\0A\0N\0T\0A\0L\0L\0A\0 \0C\0O\0M\0P\0L\0E\0T\0A\0\0\0";
+static const char g_str_opt_crtfilter[] =
+    "\xff\xfe" "F\0I\0L\0T\0R\0O\0 \0C\0R\0T\0 \0A\0R\0C\0A\0D\0E\0\0\0";
 static const char g_str_opt_hdtextures[] =
-    "\xff\xfe" "T\0E\0X\0T\0U\0R\0A\0S\0 \0E\0N\0 \0H\0D\0\0\0";
+    "\xff\xfe" "F\0I\0L\0T\0R\0A\0D\0O\0 \0D\0E\0 \0T\0E\0X\0T\0U\0R\0A\0S\0\0\0";
 
 
 /* ----------------------------------------------------------- Write_SettingsData
@@ -1128,6 +1131,7 @@ void Write_SettingsData(void)
 
     Settings[8] = g_cfg_widescreen;
     Settings[7] = g_cfg_hd_textures;
+    Settings[9] = g_cfg_crt_filter;
 
     puts("######### writing settings data");
     limeWriteFile("settingsdata", Settings, 0x28, 0);
@@ -1175,12 +1179,13 @@ void ResetSettingsData(void)
     Settings[3] = 3;
     Settings[5] = 0;
     Settings[6] = 1;
-    Settings[7] = 1;
-    Settings[8] = 1;
-    Settings[9] = 1;
+    Settings[7] = 0; /* Texturas originales */
+    Settings[8] = 0; /* Aspect ratio original 4:3 */
+    Settings[9] = 1; /* Filtro CRT activado */
 
     g_cfg_widescreen = Settings[8];
     g_cfg_hd_textures = Settings[7];
+    g_cfg_crt_filter = Settings[9];
     UseLOWAssets = g_cfg_hd_textures ? 0 : 1;
 }
 
@@ -1488,6 +1493,7 @@ void Load_SettingsData(void)
 
     g_cfg_widescreen = Settings[8];
     g_cfg_hd_textures = Settings[7];
+    g_cfg_crt_filter = Settings[9];
     UseLOWAssets = g_cfg_hd_textures ? 0 : 1;
 
     printf("%d\n", Settings[7]);
@@ -3219,15 +3225,8 @@ void DrawMainMenu(int c1, int c2, int c3, int c4, int c5)
                         (float)((double)FE_WidthScale * 1.3),
                         &mmfontcol[c3 * 4], 0.008f);
 
-    limeDrawFONTAtAngle(font, GameText(5),
-                        (float)FE_X(190.0f), (float)FE_Y(250.0f), 2,
-                        (float)((double)FE_WidthScale * 1.3),
-                        &mmfontcol[c4 * 4], 0.023f);
-
-    limeDrawFONTAtAngle(font, GameText(213),
-                        (float)FE_X(167.0f), (float)FE_Y(290.0f), 2,
-                        (float)((double)FE_WidthScale * 1.3),
-                        &mmfontcol[c5 * 4], 0.015f);
+    (void)c4;
+    (void)c5;
 }
 
 
@@ -4548,26 +4547,31 @@ void FE_Task_Manage_Social_Features(void)
                    (float)limeScreenWidth, (float)limeScreenHeight,
                    0.0f, 0.0234375f, 1.0f, 0.703125f, col);
 
-    choice = drawPage2x1Wide(0, 0);
+    choice = drawPage1x3Small();
 
     /* Page title */
     limeDrawFONT(&GameFont, g_str_pantalla_title, (float)FE_X(240.0f),
-                 (float)FE_Y(18.0f), 1, FE_WidthScale, fontcol);
+                 (float)FE_Y(24.0f), 1, FE_WidthScale, fontcol);
 
-    /* Option 1: Fullscreen Widescreen */
+    /* Option 1: Fullscreen Widescreen (Button 1 at y = 90) */
     limeDrawFONT(&GameFont, g_str_opt_fullscreen, (float)FE_X(240.0f),
-                 (float)FE_Y(44.0f), 1, FE_WidthScale, fontcol);
-
+                 (float)FE_Y(78.0f), 1, FE_WidthScale, fontcol);
     limeDrawFONT(&GameFont, GameText(Settings[8] ? 0xe1 : 0xe2),
-                 (float)FE_X(240.0f), (float)FE_Y(60.0f),
+                 (float)FE_X(240.0f), (float)FE_Y(98.0f),
                  1, FE_WidthScale, fontcol);
 
-    /* Option 2: HD Textures */
-    limeDrawFONT(&GameFont, g_str_opt_hdtextures, (float)FE_X(240.0f),
-                 (float)FE_Y(144.0f), 1, FE_WidthScale, fontcol);
+    /* Option 2: CRT Arcade Filter (Button 2 at y = 160) */
+    limeDrawFONT(&GameFont, g_str_opt_crtfilter, (float)FE_X(240.0f),
+                 (float)FE_Y(148.0f), 1, FE_WidthScale, fontcol);
+    limeDrawFONT(&GameFont, GameText(Settings[9] ? 0xe1 : 0xe2),
+                 (float)FE_X(240.0f), (float)FE_Y(168.0f),
+                 1, FE_WidthScale, fontcol);
 
+    /* Option 3: HD Textures Filtering (Button 3 at y = 230) */
+    limeDrawFONT(&GameFont, g_str_opt_hdtextures, (float)FE_X(240.0f),
+                 (float)FE_Y(218.0f), 1, FE_WidthScale, fontcol);
     limeDrawFONT(&GameFont, GameText(Settings[7] ? 0xe1 : 0xe2),
-                 (float)FE_X(240.0f), (float)FE_Y(160.0f),
+                 (float)FE_X(240.0f), (float)FE_Y(238.0f),
                  1, FE_WidthScale, fontcol);
 
     if (choice == 1) {
@@ -4575,13 +4579,14 @@ void FE_Task_Manage_Social_Features(void)
         g_cfg_widescreen = Settings[8];
         Write_SettingsData();
     } else if (choice == 2) {
+        Settings[9] ^= 1;
+        g_cfg_crt_filter = Settings[9];
+        Write_SettingsData();
+    } else if (choice == 3) {
         Settings[7] ^= 1;
         g_cfg_hd_textures = Settings[7];
         UseLOWAssets = g_cfg_hd_textures ? 0 : 1;
         lime_update_texture_filtering(g_cfg_hd_textures);
-        Write_SettingsData();
-    } else if (choice == 5) {
-        PopFETaskDeferred();
         Write_SettingsData();
     }
 
@@ -5419,17 +5424,13 @@ void FE_Task_Main_Menu(void)
     if (Touch_MMPlay & 1)
         sel = 0;
 
-    Touch_MMHelp = TouchAreaWH(0, 0xa0, 0xd2, 0x32);
-    if (Touch_MMHelp & 1)
-        sel = 2;
+    Touch_MMHelp = 0;
 
-    Touch_MMExtra = TouchAreaWH(0, 0xd2, 0xc4, 0x3c);
+    Touch_MMExtra = TouchAreaWH(0, 0xa0, 0xfa, 0x46);
     if (Touch_MMExtra & 1)
         sel = 3;
 
-    Touch_MMMore = TouchAreaWH(0, 0x11c, 0xa8, 0x32);
-    if (Touch_MMMore & 1)
-        sel = 4;
+    Touch_MMMore = 0;
 
     MaintainFESlide();
 
@@ -7151,17 +7152,13 @@ void FE_Task_Options(void)
     if (Touch_MMPlay & 1)
         sel = 6;
 
-    Touch_MMHelp = TouchAreaWH(0, 0xa0, 0xd2, 0x32);
-    if (Touch_MMHelp & 1)
-        sel = 7;
+    Touch_MMHelp = 0;
 
-    Touch_MMExtra = TouchAreaWH(0, 0xd2, 0xc4, 0x3c);
+    Touch_MMExtra = TouchAreaWH(0, 0xa0, 0xfa, 0x46);
     if (Touch_MMExtra & 1)
         sel = 8;
 
-    Touch_MMMore = TouchAreaWH(0, 0x11c, 0xa8, 0x32);
-    if (Touch_MMMore & 1)
-        sel = 9;
+    Touch_MMMore = 0;
 
     /* ---- one entry lit, the rest at zero ---- */
     if (FESlideOffset != 0.0f)

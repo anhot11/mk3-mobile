@@ -637,6 +637,7 @@ void LIME_GLAPI glColor4f(float r, float g, float b, float a){ (void)r; (void)g;
 void LIME_GLAPI glDepthMask(unsigned char flag)              { (void)flag; }
 void LIME_GLAPI glShadeModel(unsigned mode)                  { (void)mode; }
 void lime_update_texture_filtering(int hd)                   { (void)hd; }
+void draw_crt_scanlines(int screen_w, int screen_h)          { (void)screen_w; (void)screen_h; }
 
 #endif  /* !UMK3_REAL_GL */
 

@@ -65,6 +65,8 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets
           if [ -d "res" ]; then
+            echo "Patching and remastering UI and font assets..."
+            python3 tools/patch_assets.py res
             echo "Generating 4K modern horror touch controls atlas..."
             python3 tools/generate_controls_atlas.py res/Textures/BUTTONS_TPAGE.PNG
             cp res/Textures/BUTTONS_TPAGE.PNG res/Textures/BUTTONS_TPAGE_IPAD.PNG

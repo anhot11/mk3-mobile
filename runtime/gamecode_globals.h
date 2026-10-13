@@ -352,7 +352,10 @@ typedef struct {
     MOVESSECTION section[2];
     long         rows3;                 /* section 3 -- never displayed */
     const long  *moves5_3;
-    const long  *moves6_3;
 } MOVESLISTENTRY;
+
+extern int g_cfg_widescreen;
+extern int g_cfg_hd_textures;
+extern int g_cfg_crt_filter;
 
 #endif

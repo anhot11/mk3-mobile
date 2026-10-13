@@ -5141,7 +5141,7 @@ void Task_LoadGeneralData(void)
         Settings[2] = 0;                /* their music wins over ours */
 
     /* ---- game font: two atlases, and a code table from a separate file */
-    limeCreateFONT("MKFONT_0.PNG", "MKFONT_1.PNG", "mkfont_ipad.ft2",
+    limeCreateFONT("MKFONT_IPAD_0.PNG", "MKFONT_IPAD_1.PNG", "mkfont_ipad.ft2",
                    &GameFont, 0, 0x800, 0x800, 1, 0.32499999f);
     GameFont.spacing = -4;
     GameFont.fallbackAdvance = 17;

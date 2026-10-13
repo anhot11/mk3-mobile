@@ -8,6 +8,7 @@ import android.os.VibrationEffect;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
+import android.content.pm.ActivityInfo;
 import android.view.View;
 import android.view.WindowManager;
 import android.util.Log;
@@ -29,6 +30,8 @@ public class MainActivity extends SDLActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+
         // Enable edge-to-edge drawing into display cutout (notch)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             getWindow().getAttributes().layoutInDisplayCutoutMode =
@@ -81,7 +84,7 @@ public class MainActivity extends SDLActivity {
     private void copyAssetsToInternalStorage() {
         SharedPreferences prefs = getSharedPreferences("umk3_prefs", MODE_PRIVATE);
         int lastExtractedVersion = prefs.getInt("extracted_version", -1);
-        int currentVersion = 2;
+        int currentVersion = 4;
         try {
             currentVersion = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
         } catch (Exception ignored) {}
