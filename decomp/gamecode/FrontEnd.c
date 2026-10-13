@@ -1523,32 +1523,37 @@ void Load_PresetButtonData(void)
 {
     long *src;
     int i;
+    int missing = 0;
 
     src = (long *)limeLoadSaveFile("preset4data");
-    if (src == 0)
-        goto reset;
-    for (i = 0; i < 0x78 / 4; i++)
-        ((long *)CustomButtonsPos4)[i] = src[i];
-    limeFree(src);
+    if (src != 0) {
+        for (i = 0; i < 0x78 / 4; i++)
+            ((long *)CustomButtonsPos4)[i] = src[i];
+        limeFree(src);
+    } else {
+        missing = 1;
+    }
 
     src = (long *)limeLoadSaveFile("preset5data");
-    if (src == 0)
-        goto reset;
-    for (i = 0; i < 0x78 / 4; i++)
-        ((long *)CustomButtonsPos5)[i] = src[i];
-    limeFree(src);
+    if (src != 0) {
+        for (i = 0; i < 0x78 / 4; i++)
+            ((long *)CustomButtonsPos5)[i] = src[i];
+        limeFree(src);
+    } else {
+        missing = 1;
+    }
 
     src = (long *)limeLoadSaveFile("preset6data");
-    if (src == 0)
-        goto reset;
-    for (i = 0; i < 0x78 / 4; i++)
-        ((long *)CustomButtonsPos6)[i] = src[i];
-    limeFree(src);
-    return;
+    if (src != 0) {
+        for (i = 0; i < 0x78 / 4; i++)
+            ((long *)CustomButtonsPos6)[i] = src[i];
+        limeFree(src);
+    } else {
+        missing = 1;
+    }
 
-reset:
-    /* Whatever the live tables hold right now -- there is no reset here. */
-    Write_PresetButtonData();
+    if (missing)
+        Write_PresetButtonData();
 }
 
 

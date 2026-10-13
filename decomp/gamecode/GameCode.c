@@ -4456,6 +4456,9 @@ void ReadControls(void)
 extern long ButtonsPos4[];              /* 0x0015012c */
 extern long ButtonsPos5[];              /* 0x001501a4 */
 extern long ButtonsPos6[];              /* 0x0015021c */
+extern long CustomButtonsPos4[];        /* 0x00150294 */
+extern long CustomButtonsPos5[];        /* 0x0015030c */
+extern long CustomButtonsPos6[];        /* 0x00150384 */
 extern long JoystickStatePosXv;         /* 0x0014fec0 */
 extern long JoystickStatePosYv;         /* 0x0014fec4 */
 extern float JSIZE;                     /* 0x0014e1dc = 64.0 */
@@ -4527,9 +4530,15 @@ void DrawControlsPreview(long originX, long originY)
 
     colour[0] = colour[1] = colour[2] = colour[3] = 1.0f;   /* C.126 */
 
-    src = (Settings[4] == 4) ? ButtonsPos4
-        : (Settings[4] == 5) ? ButtonsPos5
-        : (Settings[4] == 6) ? ButtonsPos6 : 0;
+    if (Settings[5] == 0) {
+        src = (Settings[4] == 4) ? ButtonsPos4
+            : (Settings[4] == 5) ? ButtonsPos5
+            : (Settings[4] == 6) ? ButtonsPos6 : 0;
+    } else {
+        src = (Settings[4] == 4) ? CustomButtonsPos4
+            : (Settings[4] == 5) ? CustomButtonsPos5
+            : (Settings[4] == 6) ? CustomButtonsPos6 : 0;
+    }
 
     if (src != 0) {
         for (k = 0; k < 5; k++)                 /* transposed on purpose */
@@ -4693,6 +4702,9 @@ void EASDK_LogEventEnumEnumStringNum(long id, long a, const char *s,
  * Ends with `Write_AchievementsData()` and, if `Settings[2]` is set,
  * `FadeMusicOut = 1`.
  */
+void Write_SettingsData(void);
+void Write_PresetButtonData(void);
+
 void QuitAsLose(void)
 {
     JustWon = 0;
@@ -4772,6 +4784,9 @@ void QuitAsLose(void)
         break;
     }
 
+    P2Controls = 0;
+    Write_SettingsData();
+    Write_PresetButtonData();
     Write_AchievementsData();
     if (Settings[2] != 0)
         FadeMusicOut = 1;
@@ -5383,6 +5398,9 @@ void QuitAsWin(void)
         break;
     }
 
+    P2Controls = 0;
+    Write_SettingsData();
+    Write_PresetButtonData();
     if (GameMode != 1)
         Write_SaveData();
     Write_AchievementsData();
@@ -8101,18 +8119,26 @@ void DrawHUD(void)
 
     /* Two full-screen overlays, both from Scorpion's lair transition. */
     ScorpionFade += ScorpionFadeAdd / limeFPSScaleFactor;
-    if (ScorpionFade > 1.0f)
+    if (ScorpionFade >= 1.0f) {
         ScorpionFade = 1.0f;
-    if (ScorpionFade != 0.0f)
+        ScorpionFadeAdd = -1.0f / 30.0f;
+    } else if (ScorpionFade <= 0.0f) {
+        ScorpionFade = 0.0f;
+        ScorpionFadeAdd = 0.0f;
+    }
+    if (ScorpionFade > 0.001f) {
+        limeEnableAlphaBlending_Basic();
         limeFillRect(0.0f, 0.0f, (float)limeScreenWidth, (float)limeScreenHeight,
                      0.0f, 0.0f, 0.0f, ScorpionFade);
+    }
 
-    if (ScorpionFlash != 0.0f) {
+    if (ScorpionFlash > 0.001f) {
+        limeEnableAlphaBlending_Basic();
+        limeFillRect(0.0f, 0.0f, (float)limeScreenWidth, (float)limeScreenHeight,
+                     1.0f, 1.0f, 1.0f, ScorpionFlash * 0.7f);
         ScorpionFlash += (-1.0f / 6.0f) / limeFPSScaleFactor;
         if (ScorpionFlash <= 0.0f)
             ScorpionFlash = 0.0f;
-        limeFillRect(0.0f, 0.0f, (float)limeScreenWidth, (float)limeScreenHeight,
-                     1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     limeEnableAlphaBlending_Basic();
@@ -8679,6 +8705,11 @@ void DrawControls(void)
     joyKnobCol[0] = 1.0f; joyKnobCol[1] = 1.0f; joyKnobCol[2] = 1.0f;
     joyKnobCol[3] = 1.0f;
 
+    if (Settings[4] < 5 || Settings[4] > 6)
+        Settings[4] = 5;
+    if (Settings[5] < 0 || Settings[5] > 1)
+        Settings[5] = 0;
+
     Player1NumButtons = Settings[4];
 
     /* ---- rebuild the live layouts from the settings ---- */
@@ -8694,7 +8725,7 @@ void DrawControls(void)
     if (src)
         CopyButtonLayout(ButtonsPos, src);
 
-    if (P2Controls) {
+    if (GameMode == 6 && P2Controls) {
         CopyButtonLayout(ButtonsPos,
                          (Settings[4] == 5) ? ButtonsPosP2_1 : ButtonsPos6P2_1);
         CopyButtonLayout(ButtonsPosP2,
@@ -8719,7 +8750,7 @@ void DrawControls(void)
     JSIZE             = ButtonSize;
     JoystickStatePosY = (long)((float)limeScreenHeight - ButtonSize);
 
-    if (P2Controls) {
+    if (GameMode == 6 && P2Controls) {
         /* the doubles are the original's; a float port lands a pixel off */
         double two_thirds = 0.666667;
         float  small      = (float)((double)ButtonSize * two_thirds);
@@ -8744,13 +8775,13 @@ void DrawControls(void)
     DrawJoystick(JoystickStatePosX, JoystickStatePosY, JoystickState,
                  joyBaseCol, joyKnobCol);
 
-    if (P2Controls)
+    if (GameMode == 6 && P2Controls)
         DrawJoystick(JoystickStatePosXP2, JoystickStatePosYP2, JoystickStateP2,
                      joyBaseCol, joyKnobCol);
 
     DrawButtonRow(ButtonsPos, ButtonStates, buttonCol);
 
-    if (P2Controls)
+    if (GameMode == 6 && P2Controls)
         DrawButtonRow(ButtonsPosP2, ButtonStatesP2, buttonCol);
 
 }
@@ -8974,6 +9005,7 @@ void Task_GameDestroy(void)
         CurrentTask = 8;
     }
 
+    P2Controls        = 0;
     GamePaused        = 0;
     otherPlayerPaused = 0;
 

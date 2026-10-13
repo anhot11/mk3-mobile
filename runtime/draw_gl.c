@@ -484,6 +484,8 @@ void limeFillRect(float x, float y, float w, float h,
     /* armv7 0x000666ac: depth writes off, texturing off -- and LEFT off, the
      * next sprite turns it back on -- then depth writes back on. */
     glDepthMask(GL_FALSE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glColor4f(r, g, b, a);
     glDisable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
@@ -492,6 +494,7 @@ void limeFillRect(float x, float y, float w, float h,
         glVertex2f(x + w, y + h);
         glVertex2f(x,     y + h);
     glEnd();
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glDepthMask(GL_TRUE);
     g_fills++;
 }
@@ -554,6 +557,11 @@ void draw_crt_scanlines(int screen_w, int screen_h)
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_BLEND);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
 }
