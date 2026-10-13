@@ -10,8 +10,8 @@ android {
         applicationId "com.ea.game.umk3"
         minSdk 21
         targetSdk 34
-        versionCode 3
-        versionName "1.4.0"
+        versionCode 5
+        versionName "1.5.1"
 
         ndk {
             abiFilters 'armeabi-v7a', 'x86'

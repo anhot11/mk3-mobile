@@ -148,7 +148,7 @@ static int load_rgba(const char *path, LimeImage *out)
     /* The name as asked, then the same stem under each real extension. The
      * data says ".PNG" for files that are .pvr on disk -- the exporter wrote
      * one extension and the device supplied another. */
-    static const char *const exts[] = { ".pvr", ".PVR", NULL, ".png", ".PNG" };
+    static const char *const exts[] = { NULL, ".png", ".PNG", ".pvr", ".PVR" };
 
     const char *root = lime_platform_asset_root();
     char full[1200];

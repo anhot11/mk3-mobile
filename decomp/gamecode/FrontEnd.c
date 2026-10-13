@@ -3210,22 +3210,25 @@ void DrawMainMenu(int c1, int c2, int c3, int c4, int c5)
 
     font = &GameFont;
 
-    limeDrawFONTAtAngle(font, GameText(4),
-                        (float)FE_X(170.0f), (float)FE_Y(24.0f), 2,
-                        (float)((double)FE_WidthScale * 1.4),
-                        &mmfontcol[c1 * 4], -0.021f);
-
+    /* Tombstone 1 (top): PLAY */
     limeDrawFONTAtAngle(font, GameText(10),
+                        (float)FE_X(170.0f), (float)FE_Y(24.0f), 2,
+                        (float)((double)FE_WidthScale * 1.5),
+                        &mmfontcol[c2 * 4], -0.021f);
+
+    /* Tombstone 2 (middle): OPTIONS */
+    limeDrawFONTAtAngle(font, GameText(4),
                         (float)FE_X(218.0f), (float)FE_Y(104.0f), 2,
-                        (float)((double)FE_WidthScale * 1.6),
-                        &mmfontcol[c2 * 4], -0.0021f);
+                        (float)((double)FE_WidthScale * 1.4),
+                        &mmfontcol[c1 * 4], -0.0021f);
 
-    limeDrawFONTAtAngle(font, GameText(6),
+    /* Tombstone 3 (bottom): EXTRAS */
+    limeDrawFONTAtAngle(font, GameText(5),
                         (float)FE_X(190.0f), (float)FE_Y(180.0f), 2,
-                        (float)((double)FE_WidthScale * 1.3),
-                        &mmfontcol[c3 * 4], 0.008f);
+                        (float)((double)FE_WidthScale * 1.4),
+                        &mmfontcol[c4 * 4], 0.008f);
 
-    (void)c4;
+    (void)c3;
     (void)c5;
 }
 
@@ -5417,16 +5420,16 @@ void FE_Task_Main_Menu(void)
     limeEnableAlphaBlending_Basic();
     limeSet2DDrawing();
 
-    Touch_MMOptions = TouchAreaWH(0, 0, 0xc4, 0x44);
-    sel = (Touch_MMOptions & 1) ? 1 : -1;
+    Touch_MMPlay = TouchAreaWH(0, 0, 0x12c, 0x48);
+    sel = (Touch_MMPlay & 1) ? 0 : -1;
 
-    Touch_MMPlay = TouchAreaWH(0, 0x5a, 0xed, 0x34);
-    if (Touch_MMPlay & 1)
-        sel = 0;
+    Touch_MMOptions = TouchAreaWH(0, 0x50, 0x12c, 0x48);
+    if (Touch_MMOptions & 1)
+        sel = 1;
 
     Touch_MMHelp = 0;
 
-    Touch_MMExtra = TouchAreaWH(0, 0xa0, 0xfa, 0x46);
+    Touch_MMExtra = TouchAreaWH(0, 0x98, 0x12c, 0x50);
     if (Touch_MMExtra & 1)
         sel = 3;
 
@@ -7145,16 +7148,16 @@ void FE_Task_Options(void)
     limeSet2DDrawing();
 
     /* ---- the main menu underneath is still live ---- */
-    Touch_MMOptions = TouchAreaWH(0, 0, 0xc4, 0x44);
-    sel = (Touch_MMOptions & 1) ? 5 : -1;
+    Touch_MMPlay = TouchAreaWH(0, 0, 0x12c, 0x48);
+    sel = (Touch_MMPlay & 1) ? 6 : -1;
 
-    Touch_MMPlay = TouchAreaWH(0, 0x5a, 0xed, 0x34);
-    if (Touch_MMPlay & 1)
-        sel = 6;
+    Touch_MMOptions = TouchAreaWH(0, 0x50, 0x12c, 0x48);
+    if (Touch_MMOptions & 1)
+        sel = 5;
 
     Touch_MMHelp = 0;
 
-    Touch_MMExtra = TouchAreaWH(0, 0xa0, 0xfa, 0x46);
+    Touch_MMExtra = TouchAreaWH(0, 0x98, 0x12c, 0x50);
     if (Touch_MMExtra & 1)
         sel = 8;
 
@@ -8646,24 +8649,20 @@ void FE_Task_Extras(void)
     limeEnableAlphaBlending_Basic();
     limeSet2DDrawing();
 
-    Touch_MMOptions = TouchAreaWH(0, 0, 0xc4, 0x44);
-    sel = (Touch_MMOptions & 1) ? 7 : -1;
+    Touch_MMPlay = TouchAreaWH(0, 0, 0x12c, 0x48);
+    sel = (Touch_MMPlay & 1) ? 8 : -1;
 
-    Touch_MMPlay = TouchAreaWH(0, 0x5a, 0xed, 0x34);
-    if (Touch_MMPlay & 1)
-        sel = 8;
+    Touch_MMOptions = TouchAreaWH(0, 0x50, 0x12c, 0x48);
+    if (Touch_MMOptions & 1)
+        sel = 7;
 
-    Touch_MMHelp = TouchAreaWH(0, 0xa0, 0xd2, 0x32);
-    if (Touch_MMHelp & 1)
-        sel = 9;
+    Touch_MMHelp = 0;
 
-    Touch_MMExtra = TouchAreaWH(0, 0xd2, 0xc4, 0x3c);
+    Touch_MMExtra = TouchAreaWH(0, 0x98, 0x12c, 0x50);
     if (Touch_MMExtra & 1)
         sel = 0xa;
 
-    Touch_MMMore = TouchAreaWH(0, 0x11c, 0xa8, 0x32);
-    if (Touch_MMMore & 1)
-        sel = 0xb;
+    Touch_MMMore = 0;
 
     if (FESlideOffset != 0.0f)
         DrawMainMenu(0, 0, 0, 0, 5);
@@ -9548,24 +9547,20 @@ void FE_Task_Play(void)
     limeEnableAlphaBlending_Basic();
     limeSet2DDrawing();
 
-    Touch_MMOptions = TouchAreaWH(0, 0, 0xc4, 0x44);
-    sel = (Touch_MMOptions & 1) ? 6 : -1;
+    Touch_MMPlay = TouchAreaWH(0, 0, 0x12c, 0x48);
+    sel = (Touch_MMPlay & 1) ? 7 : -1;
 
-    Touch_MMPlay = TouchAreaWH(0, 0x5a, 0xed, 0x34);
-    if (Touch_MMPlay & 1)
-        sel = 7;
+    Touch_MMOptions = TouchAreaWH(0, 0x50, 0x12c, 0x48);
+    if (Touch_MMOptions & 1)
+        sel = 6;
 
-    Touch_MMHelp = TouchAreaWH(0, 0xa0, 0xd2, 0x32);
-    if (Touch_MMHelp & 1)
-        sel = 8;
+    Touch_MMHelp = 0;
 
-    Touch_MMExtra = TouchAreaWH(0, 0xd2, 0xc4, 0x3c);
+    Touch_MMExtra = TouchAreaWH(0, 0x98, 0x12c, 0x50);
     if (Touch_MMExtra & 1)
         sel = 9;
 
-    Touch_MMMore = TouchAreaWH(0, 0x11c, 0xa8, 0x32);
-    if (Touch_MMMore & 1)
-        sel = 0xa;
+    Touch_MMMore = 0;
 
     if (FESlideOffset != 0.0f)
         DrawMainMenu(0, 0, 0, 0, 5);

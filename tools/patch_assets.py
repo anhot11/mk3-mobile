@@ -13,16 +13,25 @@ import sys
 from PIL import Image, ImageDraw, ImageFilter
 
 def patch_fenew1(res_dir):
-    fenew1_path = os.path.join(res_dir, 'Textures', 'FENEW1.PNG')
-    if not os.path.exists(fenew1_path):
-        return
-    im = Image.open(fenew1_path).convert('RGBA')
-    # In FENEW1, top-left quadrant (512x512) contains the tombstones.
-    # Wiping the lower 2 tombstones (y >= 300 in 1024x1024 space)
-    draw = ImageDraw.Draw(im)
-    draw.rectangle([0, 300, 512, 1024], fill=(0, 0, 0, 0))
-    im.save(fenew1_path)
-    print("FENEW1.PNG patched (Help & More Games tombstones removed).")
+    tex_dir = os.path.join(res_dir, 'Textures')
+    fenew1_path = os.path.join(tex_dir, 'FENEW1.PNG')
+    fenew1_low = os.path.join(tex_dir, 'FENEW1_LOW.PNG')
+    
+    # Remove stale PVR files so our clean PNG is always used
+    for pvr in ['FENEW1.pvr', 'FENEW1_LOW.pvr', 'FENEW1.PVR', 'FENEW1_LOW.PVR']:
+        p = os.path.join(tex_dir, pvr)
+        if os.path.exists(p):
+            os.remove(p)
+            print(f"Removed stale {pvr}")
+
+    # Wipe only the lower 2 tombstones (y >= 480 in 1024x1024 space)
+    for p in [fenew1_path, fenew1_low]:
+        if os.path.exists(p):
+            im = Image.open(p).convert('RGBA')
+            draw = ImageDraw.Draw(im)
+            draw.rectangle([0, 480, 512, 768], fill=(0, 0, 0, 0))
+            im.save(p)
+            print(f"{os.path.basename(p)} patched (3 clean tombstones preserved).")
 
 def patch_hud(res_dir):
     hud_path = os.path.join(res_dir, 'Textures', 'HUD_TPAGE.PNG')
